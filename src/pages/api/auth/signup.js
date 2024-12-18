@@ -6,6 +6,6 @@ export default async function signup(req, res) {
       prompt: "login",
       screen_hint: "signup",
     },
-    returnTo: "/profile",
+    returnTo: "/account",
   });
 }

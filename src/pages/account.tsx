@@ -2,10 +2,20 @@ import React from 'react';
 import { Card, Button, Typography, Space, Row, Col } from 'antd';
 import { EditOutlined } from '@ant-design/icons';
 import PageLayout from '@/components/page-layout';
+import { useUser } from '@auth0/nextjs-auth0/client';
 
 const { Title, Text, Link } = Typography;
 
 const AccountPage = () => {
+  const defaultPicture =
+    "https://cdn.auth0.com/blog/hello-auth0/auth0-user.png";
+
+  const { user } = useUser();
+
+  if (!user) {
+    return null;
+  }
+
   return (
     <PageLayout>
       {/* Header */}
@@ -41,7 +51,7 @@ const AccountPage = () => {
           </Col>
           <Col>
             <img
-              src="https://via.placeholder.com/100"
+              src={user.picture || defaultPicture}
               alt="Upgrade"
               style={{ width: '100px' }}
             />
@@ -55,9 +65,9 @@ const AccountPage = () => {
           <Col>
             <Space direction="vertical" size="small">
               <Text strong style={{ fontSize: 16 }}>
-                Win Hantari
+                {user.name}
               </Text>
-              <Text>kantinbwin@gmail.com</Text>
+              <Text>{user.email}</Text>
               <Text>+6282136380355</Text>
             </Space>
           </Col>
