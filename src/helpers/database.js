@@ -1,6 +1,6 @@
 import { MongoClient } from 'mongodb';
 
-const uri = "mongodb://mkrs:Ojolali123@139.162.58.173:27017/";
+const uri = "mongodb://mkrs:Ojolali123@46.250.229.129:27017/torism?authSource=admin";
 
 let cachedClient = null;
 let cachedDb = null;
