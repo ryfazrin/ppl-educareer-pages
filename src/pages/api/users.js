@@ -1,32 +1,29 @@
 import { connectToDatabase } from "../../helpers/database";
 
 export default async function handler(req, res) {
-  const { method } = req;
+  if (req.method === 'GET') {
+    const { nickname } = req.query;
 
-  try {
-    const { db } = await connectToDatabase();
-
-    if (method === 'GET') {
-      // Fetch data from a collection
-      const data = await db.collection('users').find({}).toArray(); // Replace with your collection name
-      return res.status(200).json(data);
+    if (!nickname) {
+      return res.status(400).json({ message: 'Nickname is required' });
     }
 
-    // if (method === 'POST') {
-    //   // Insert data into a collection
-    //   const { name, value } = req.body; // Example for posting data
-    //   const result = await db.collection('users').insertOne({
-    //     name,
-    //     value,
-    //   });
+    try {
+      const { db } = await connectToDatabase();
 
-    //   return res.status(201).json(result.ops[0]);
-    // }
+      // Cek apakah nickname pengguna ada di koleksi `users`
+      const user = await db.collection('users').findOne({ nickname });
 
-    // Handle other HTTP methods (PUT, DELETE, etc.)
-    return res.status(405).json({ message: 'Method Not Allowed' });
-  } catch (error) {
-    console.error('Database connection error:', error);
-    return res.status(500).json({ message: 'Internal Server Error' });
+      if (user) {
+        return res.status(200).json({ user, found: true });
+      } else {
+        return res.status(200).json({ found: false });
+      }
+    } catch (error) {
+      console.error('Error fetching user:', error);
+      return res.status(500).json({ message: 'Server error' });
+    }
+  } else {
+    res.status(405).json({ message: 'Method Not Allowed' });
   }
 }

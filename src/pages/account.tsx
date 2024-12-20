@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Card, Button, Typography, Space, Row, Col } from 'antd';
 import { EditOutlined } from '@ant-design/icons';
 import PageLayout from '@/components/page-layout';
@@ -10,11 +10,41 @@ const AccountPage = () => {
   const defaultPicture =
     "https://cdn.auth0.com/blog/hello-auth0/auth0-user.png";
 
-  const { user } = useUser();
+  const { user, error, isLoading } = useUser();
 
-  if (!user) {
-    return null;
-  }
+  const [mongoUser, setMongoUser] = useState();
+  const [isUserRegistered, setIsUserRegistered] = useState(false);
+
+  useEffect(() => {
+    // Cek jika user sudah ada dan sudah selesai loading
+    if (user) {
+      // Kirim nickname pengguna ke API /users untuk memeriksa apakah terdaftar
+      const checkUserRegistration = async () => {
+        try {
+          const response = await fetch(`/api/users?nickname=${user.nickname}`); // Ganti email dengan nickname
+          if (response.ok) {
+            const data = await response.json();
+            setIsUserRegistered(data.found); // Asumsi API mengembalikan { found: true/false }
+            setMongoUser(data.user);
+          } else {
+            console.error("Failed to check user registration");
+            setIsUserRegistered(false); // Pengguna tidak terdaftar
+          }
+        } catch (error) {
+          console.error("Error checking registration:", error);
+          setIsUserRegistered(false); // Set status gagal jika terjadi error
+        }
+      };
+
+      checkUserRegistration();
+    }
+  }, [user]);
+
+  if (isLoading) return <p>Loading...</p>;
+
+  if (error) return <p>{error.message}</p>;
+
+  if (!mongoUser) return null;
 
   return (
     <PageLayout>
@@ -35,6 +65,14 @@ const AccountPage = () => {
         }}
         bordered={false}
       >
+        {isUserRegistered === null ? (
+          <p>Checking registration...</p>
+        ) : isUserRegistered ? (
+          <p>Your account is registered in the system!</p>
+        ) : (
+          <p>Your account is not registered. Please sign up.</p>
+        )}
+        
         <Row justify="space-between" align="middle">
           <Col span={16}>
             <Space direction="vertical">
@@ -65,10 +103,11 @@ const AccountPage = () => {
           <Col>
             <Space direction="vertical" size="small">
               <Text strong style={{ fontSize: 16 }}>
-                {user.name}
+                {mongoUser.name}
               </Text>
-              <Text>{user.email}</Text>
-              <Text>+6282136380355</Text>
+              <Text>{mongoUser.nickname}</Text>
+              <Text>{mongoUser.role}</Text>
+              {/* <Text>+6282136380355</Text> */}
             </Space>
           </Col>
           <Col>
