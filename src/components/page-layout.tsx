@@ -1,16 +1,17 @@
 import { Layout, Menu, theme } from "antd";
-import React from "react";
+import React, { useEffect, useState } from "react";
 import type { MenuProps } from 'antd';
 import Link from "next/link";
 import { useUser } from "@auth0/nextjs-auth0/client";
 import { PageLoader } from "./page-loader";
 import { useRouter } from "next/router";
+import { checkUserRegistration } from "@/helpers/checkUserRegistration";
 
 const { Content, Footer, Header } = Layout;
 
 type MenuItem = Required<MenuProps>['items'][number];
 
-const items: MenuItem[] = [
+const itemsCompany: MenuItem[] = [
   {
     key: '/',
     label: <Link href="/">Home</Link>,
@@ -41,6 +42,29 @@ const items: MenuItem[] = [
   },
 ];
 
+const itemsStudent: MenuItem[] = [
+  {
+    key: '/',
+    label: <Link href="/">Home</Link>,
+  },
+  {
+    key: '/student/list-job',
+    label: <Link href="/student/list-job">List Lowongan</Link>,
+  },
+  {
+    key: '/student/history',
+    label: <Link href="/student/history">Histori Lamaran</Link>,
+  },
+  {
+    key: '/account',
+    label: <Link href="/account">Akun</Link>,
+  },
+  {
+    key: 'logout',
+    label: <Link href="/api/auth/logout">Log Out</Link>,
+  },
+];
+
 const itemsRight: MenuItem[] = [
   {
     key: 'login',
@@ -60,9 +84,26 @@ const PageLayout = ({ children }: any) => {
   const router = useRouter();
 
   // Menentukan selectedKey berdasarkan route
-  const selectedKey = items.find((item: any) => item.key === router.pathname)?.key || '/';
+  const selectedKey = itemsCompany.find((item: any) => item.key === router.pathname)?.key || '/';
 
   const { isLoading, user } = useUser();
+
+  const [mongoUser, setMongoUser] = useState<any>();
+  const [isUserRegistered, setIsUserRegistered] = useState(false);
+
+  useEffect(() => {
+    // Cek jika user sudah ada dan sudah selesai loading
+    if (user) {
+      const checkRegistration = async () => {
+        const result = await checkUserRegistration(user.nickname); // Memanggil helper
+
+        setIsUserRegistered(result.found);
+        setMongoUser(result.user);
+      };
+
+      checkRegistration();
+    }
+  }, [user]);
 
   if (isLoading) {
     return (
@@ -80,12 +121,15 @@ const PageLayout = ({ children }: any) => {
           <span className="logo-highlight">Career</span>
         </div>
 
-        {user && (
+        {mongoUser && (
           <Menu
             theme="light"
             mode="horizontal"
-            defaultSelectedKeys={[selectedKey as string]}
-            items={items}
+            defaultSelectedKeys={[
+              (mongoUser.role == "company" ? itemsCompany : itemsStudent)
+              .find((item: any) => item.key === router.pathname)?.key || '/' as any
+            ]}
+            items={mongoUser.role == "company" ? itemsCompany : itemsStudent}
             style={{ flex: 1, minWidth: 0 }}
           />
         )}
