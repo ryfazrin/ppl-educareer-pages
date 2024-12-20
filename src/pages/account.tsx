@@ -3,6 +3,7 @@ import { Card, Button, Typography, Space, Row, Col } from 'antd';
 import { EditOutlined } from '@ant-design/icons';
 import PageLayout from '@/components/page-layout';
 import { useUser } from '@auth0/nextjs-auth0/client';
+import { checkUserRegistration } from '../helpers/checkUserRegistration';
 
 const { Title, Text, Link } = Typography;
 
@@ -12,31 +13,20 @@ const AccountPage = () => {
 
   const { user, error, isLoading } = useUser();
 
-  const [mongoUser, setMongoUser] = useState();
+  const [mongoUser, setMongoUser] = useState<any>();
   const [isUserRegistered, setIsUserRegistered] = useState(false);
 
   useEffect(() => {
     // Cek jika user sudah ada dan sudah selesai loading
     if (user) {
-      // Kirim nickname pengguna ke API /users untuk memeriksa apakah terdaftar
-      const checkUserRegistration = async () => {
-        try {
-          const response = await fetch(`/api/users?nickname=${user.nickname}`); // Ganti email dengan nickname
-          if (response.ok) {
-            const data = await response.json();
-            setIsUserRegistered(data.found); // Asumsi API mengembalikan { found: true/false }
-            setMongoUser(data.user);
-          } else {
-            console.error("Failed to check user registration");
-            setIsUserRegistered(false); // Pengguna tidak terdaftar
-          }
-        } catch (error) {
-          console.error("Error checking registration:", error);
-          setIsUserRegistered(false); // Set status gagal jika terjadi error
-        }
+      const checkRegistration = async () => {
+        const result = await checkUserRegistration(user.nickname); // Memanggil helper
+
+        setIsUserRegistered(result.found);
+        setMongoUser(result.user);
       };
 
-      checkUserRegistration();
+      checkRegistration();
     }
   }, [user]);
 
@@ -89,7 +79,7 @@ const AccountPage = () => {
           </Col>
           <Col>
             <img
-              src={user.picture || defaultPicture}
+              src={user?.picture || defaultPicture}
               alt="Upgrade"
               style={{ width: '100px' }}
             />
