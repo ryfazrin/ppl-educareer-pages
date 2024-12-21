@@ -35,7 +35,40 @@ export default async function handler(req, res) {
 const getJobs = async (req, res) => {
   try {
     const { db } = await connectToDatabase();
-    const jobs = await db.collection('job_market').find({}).toArray(); // Replace 'job_market' with your actual collection name
+    const jobs = await db.collection('job_market').aggregate([
+      // Lookup for the 'created_by' field (assuming it references the 'users' collection)
+      {
+        $lookup: {
+          from: 'users', // The collection to join with
+          localField: 'created_by', // The field in 'job_market' that references 'users._id'
+          foreignField: '_id', // The field in 'users' to match with 'created_by'
+          as: 'created_by_user', // The name of the joined output field
+        },
+      },
+      // Look up for the 'company' field (assuming it references a 'company' collection)
+      {
+        $lookup: {
+          from: 'company', // The collection to join with
+          localField: 'company', // The field in 'job_market' that references 'companies._id'
+          foreignField: '_id', // The field in 'companies' to match with 'company'
+          as: 'company_details', // The name of the joined output field
+        },
+      },
+      // Optionally: Unwind the 'created_by_user' array if it contains only one object
+      {
+        $unwind: {
+          path: '$created_by_user',
+          preserveNullAndEmptyArrays: true, // Retain jobs even if there is no matching user
+        },
+      },
+      // Optionally: Unwind the 'company_details' array if it contains only one object
+      {
+        $unwind: {
+          path: '$company_details',
+          preserveNullAndEmptyArrays: true, // Retain jobs even if there is no matching company
+        },
+      },
+    ]).toArray(); // Replace 'job_market' with your actual collection name
     res.status(200).json(jobs);
   } catch (error) {
     console.error('Error fetching jobs:', error);

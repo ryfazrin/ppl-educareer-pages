@@ -5,7 +5,7 @@ import {
   ReloadOutlined,
 } from '@ant-design/icons';
 import PageLayout from "@/components/page-layout";
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 
 const { Text, Title } = Typography;
 
@@ -85,16 +85,25 @@ const ListJob = () => {
         dataSource={jobVacancies}
         renderItem={(job: any) => (
           <Card style={{ marginTop: '20px' }} key={job._id}>
-            <List.Item>
+            <List.Item
+              actions={[
+                <Button
+                  type="link"
+                  icon={<FileTextOutlined />}
+                  key="reload"
+                >
+                  Submit
+                </Button>,
+              ]}>
               <Space direction="vertical" size="small">
-                <Tag color={job.status === 'Kadaluarsa' ? 'red' : 'default'}>
+                <Tag color={job.status === 'closed' ? 'red' : 'green'}>
                   {job.status}
                 </Tag>
                 <Text type="secondary">Dibuat {job.created_at}</Text>
                 <Title level={5} style={{ margin: 0 }}>
                   {job.title}
                 </Title>
-                <Text>{job.company} - {job.location}</Text>
+                <Text>{job.company_details.company} - {job.location}</Text>
                 <Space size="middle">
                   <ClockCircleOutlined />
                   <Text>{job.expiration_date}</Text>

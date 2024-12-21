@@ -49,7 +49,7 @@ const itemsStudent: MenuItem[] = [
   },
   {
     key: '/student/list-job',
-    label: <Link href="/student/list-job">List Lowongan</Link>,
+    label: <Link href="/student/list-job">Lowongan</Link>,
   },
   {
     key: '/student/history',
